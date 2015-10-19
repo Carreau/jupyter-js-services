@@ -62,7 +62,22 @@ function urlPathJoin(...paths: string[]): string {
 
 
 /**
- * Encode just the components of a multi-segment uri.
+ * Like os.path.split for URLs.
+ * Always returns two strings, the directory path and the base filename
+ */
+export function urlPathSplit(path: string): string[] {
+    
+    var idx = path.lastIndexOf('/');
+    if (idx === -1) {
+        return ['', path];
+    } else {
+        return [ path.slice(0, idx), path.slice(idx + 1) ];
+    }
+ };
+
+
+/**
+ * Encode just the components of a multi-segment uri.  
  *
  * Preserves the `'/'` separators.
  */
@@ -186,6 +201,65 @@ function ajaxRequest(url: string, settings: IAjaxSettings, options?: IAjaxOption
     }
   });
 }
+
+
+var XHR_ERROR = 'XhrError';
+
+var ajax_error_msg = function (jqXHR:any) {
+    /**
+     * Return a JSON error message if there is one,
+     * otherwise the basic HTTP status text.
+     */
+    if (jqXHR.responseJSON && jqXHR.responseJSON.traceback) {
+        return jqXHR.responseJSON.traceback;
+    } else if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+        return jqXHR.responseJSON.message;
+    } else {
+        return jqXHR.statusText;
+    }
+};
+
+export var log_ajax_error = function (jqXHR:any, status:any, error:any) {
+    /**
+     * log ajax failures with informative messages
+     */
+    var msg = "API request failed (" + jqXHR.status + "): ";
+    console.log(jqXHR);
+    msg += ajax_error_msg(jqXHR);
+    console.log(msg);
+};
+
+
+/**
+ * Wraps an AJAX error as an Error object.
+ */
+export var wrap_ajax_error = function (jqXHR:any, status:any, error:any) {
+    var wrapped_error = <any>(new Error(ajax_error_msg(jqXHR)));
+    wrapped_error.name =  XHR_ERROR;
+    // provide xhr response
+    wrapped_error.xhr = jqXHR;
+    wrapped_error.xhr_status = status;
+    wrapped_error.xhr_error = error;
+    return wrapped_error;
+};
+
+/**
+ * Like $.ajax, but returning an ES6 promise. success and error settings
+ * will be ignored.
+ */
+export var promising_ajax = function(url:string, settings:any) {
+    settings = settings || {};
+    return new Promise(function(resolve, reject) {
+        settings.success = function(data, status, jqXHR) {
+            resolve(data);
+        };
+        settings.error = function(jqXHR, status, error) {
+            log_ajax_error(jqXHR, status, error);
+            reject(wrap_ajax_error(jqXHR, status, error));
+        };
+        return ajaxRequest(url, settings);
+    });
+};
 
 
 /**
