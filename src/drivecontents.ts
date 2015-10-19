@@ -10,8 +10,11 @@ import notebook_model = require('./notebook_model');
 import iface = require('./contentinterface');
 
 import Notebook = notebook_model.Notebook;
-import IContents = iface.IContents
+import {IContents} from './contents';
+import {IAjaxOptions} from './utils';
 import CheckpointId = iface.CheckpointId
+
+
 
 declare var gapi;
 
@@ -39,7 +42,7 @@ var contents_model_to_metadata_and_bytes = function(model):[any, string] {
 
     // Set mime type according to format if it's not set
     if (format == 'json') {
-        // This seem to have been wrong content, as type was String Here,
+        // This seem to have been wrong content, as type was string Here,
         // instead of a Notebook Json model. This lead to double serialisation.
         // as typescript does not seem to catch that, let's be safe.
         if(typeof(content) === 'string'){
@@ -74,12 +77,12 @@ var contents_model_to_metadata_and_bytes = function(model):[any, string] {
  * TODO: check that date formats are the same, and either
  * convert to the IPython format, or document the difference.
  *
- * @param {string} path String of resoure (including file name)
+ * @param {string} path string of resoure (including file name)
  * @param {Object} resource Google Drive files resource
  * @return {Object} IPEP 27 compliant contents model
  */
 // TODO remove contents ?
-var files_resource_to_contents_model = function(path:String, resource, content?) {
+var files_resource_to_contents_model = function(path:string, resource, content?) {
     var title = resource['title'];
     var mimetype = resource['mimeType'];
 
@@ -123,7 +126,7 @@ var files_resource_to_contents_model = function(path:String, resource, content?)
  * `IContents` interface docs
  *
  **/
-export class GoogleDriveContents  {
+export class GoogleDriveContents implements IContents  {
 
     private _base_url:string;
     private _config:any;
@@ -249,7 +252,7 @@ export class GoogleDriveContents  {
     /**
      * Notebook Functions
      */
-    get(path:String, options:any) {
+    get(path:string, options:any) {
         var metadata_prm = gapiutils.gapi_ready.then(
             driveutils.get_resource_for_path.bind(this, path, driveutils.FileType.FILE)
         )
@@ -270,12 +273,12 @@ export class GoogleDriveContents  {
     /**
      * Creates a new untitled file or directory in the specified directory path.
      *
-     * @param {String} path: the directory in which to create the new file/directory
+     * @param {string} path: the directory in which to create the new file/directory
      * @param {Object} options:
      *      ext: file extension to use
      *      type: model type to create ('notebook', 'file', or 'directory')
      */
-    newUntitled(path:String, options) {
+    newUntitled(path:string, options) {
         // Construct all data needed to upload file
         var default_ext = '';
         var base_name = '';
@@ -321,12 +324,12 @@ export class GoogleDriveContents  {
             return this._upload_new(folder_id, model);
         })
         .then(function(resource) {
-            var fullpath = <String>utils.urlPathJoin(<string>path, <string>resource['title']);
+            var fullpath = <string>utils.urlPathJoin(<string>path, <string>resource['title']);
             return files_resource_to_contents_model(fullpath, resource);
         });
     }
 
-    delete(path:String) {
+    delete(path:string) {
         return gapiutils.gapi_ready
         .then(function() {
             return driveutils.get_id_for_path(path, driveutils.FileType.FILE);
@@ -336,15 +339,15 @@ export class GoogleDriveContents  {
         });
     }
 
-    rename(path:String, new_path:String) {
+    rename(path:string, new_path:string) {
         // Rename is only possible when path and new_path differ except in
         // their last component, so check this first.
         var path_components = driveutils.split_path(path);
         var new_path_components = driveutils.split_path(new_path);
 
         var base_path = [];
-        var name:String;
-        var new_name:String;
+        var name:string;
+        var new_name:string;
         if (path_components.length != new_path_components.length) {
             return Promise.reject(new Error('Rename cannot change path'));
         }
@@ -385,9 +388,9 @@ export class GoogleDriveContents  {
      * If the resource has been modified on Drive in the
      * meantime, prompt user for overwrite.
      **/
-    save(path:String, model, options?:any) {
+    save(path:string, model, options?:any) {
         var that = this;
-        var path_and_filename = <String[]>utils.urlPathSplit(<string>path);
+        var path_and_filename = <string[]>utils.urlPathSplit(<string>path);
         var path = path_and_filename[0];
         var filename = path_and_filename[1];
         return driveutils.get_resource_for_path(<string>path, driveutils.FileType.FOLDER)
@@ -412,7 +415,7 @@ export class GoogleDriveContents  {
     }
 
 
-    copy(path:String, model) {
+    copy(path:string, model) {
         return Promise.reject(new Error('Copy not implemented yet.'));
     }
 
@@ -420,9 +423,13 @@ export class GoogleDriveContents  {
      * Checkpointing Functions
      */
 
+    deleteCheckpoint(path: string, checkpointID: string, ajaxOptions?: IAjaxOptions): Promise<void> {
+        return Promise.reject('not implemented')
+    }
+
     // NOTE: it would be better modify the API to combine create_checkpoint with
     // save
-    createCheckpoint(path:String, options:any) {
+    createCheckpoint(path:string, options:any) {
         var that = this;
         return gapiutils.gapi_ready
         .then(driveutils.get_id_for_path.bind(this, path, driveutils.FileType.FILE))
@@ -448,7 +455,7 @@ export class GoogleDriveContents  {
         });
     }
 
-    restoreCheckpoint(path:String, checkpoint_id:CheckpointId, options) {
+    restoreCheckpoint(path:string, checkpoint_id:CheckpointId, options) {
         var file_id_prm = gapiutils.gapi_ready
         .then(driveutils.get_id_for_path.bind(this, path, driveutils.FileType.FILE))
 
@@ -471,7 +478,7 @@ export class GoogleDriveContents  {
         });
     }
 
-    listCheckpoints(path:String, options:any) {
+    listCheckpoints(path:string, options:any) {
         return gapiutils.gapi_ready
         .then(driveutils.get_id_for_path.bind(this, path, driveutils.FileType.FILE))
         .then(function(file_id) {
@@ -508,7 +515,7 @@ export class GoogleDriveContents  {
      *     path: the path
      * @method list_notebooks
      */
-    listContents(path:String):Promise<any>{
+    listContents(path:string):Promise<any>{
         var that = this;
         return gapiutils.gapi_ready
         .then(driveutils.get_id_for_path.bind(this, path, driveutils.FileType.FOLDER))
@@ -546,7 +553,7 @@ export class GoogleDriveContents  {
         })
         .then(function(items) {
             var list = items.map(function(resource) {
-                var fullpath = <String>utils.urlPathJoin(<string>path, resource['title']);
+                var fullpath = <string>utils.urlPathJoin(<string>path, resource['title']);
                 return files_resource_to_contents_model(fullpath, resource)
             });
             return {content: list};
