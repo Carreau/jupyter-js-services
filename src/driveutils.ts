@@ -28,15 +28,15 @@ export enum FileType {FILE=1, FOLDER=2}
  * path_component).  It should also not contain any leading or trailing
  * slashes.
  *
- * @param {String} path_component The file/folder to find
+ * @param {string} path_component The file/folder to find
  * @param {FileType} type type of resource (file or folder)
  * @param {boolean} opt_child_resource If True, fetches a child resource
  *     which is smaller and probably quicker to obtain the a Files resource.
- * @param {String} folder_id The Google Drive folder id
+ * @param {string} folder_id The Google Drive folder id
  * @return A promise fullfilled by either the files resource for the given
  *     file/folder, or rejected with an Error object.
  */
-export var get_resource_for_relative_path = function(path_component:String, type:FileType, opt_child_resource:Boolean, folder_id:String): Promise<any> {
+export var get_resource_for_relative_path = function(path_component:string, type:FileType, opt_child_resource:Boolean, folder_id:string): Promise<any> {
         var query = 'title = \'' + path_component + '\' and trashed = false ';
         if (type == FileType.FOLDER) {
             query += ' and mimeType = \'' + FOLDER_MIME_TYPE + '\'';
@@ -69,7 +69,7 @@ export var get_resource_for_relative_path = function(path_component:String, type
 /**
  * Split a path into path components
  */
-export var split_path = function(path:String):String[] {
+export var split_path = function(path:string):string[] {
     return path.split('/').filter((s,i,a) => (Boolean(s)));
 };
 
@@ -80,12 +80,12 @@ export var split_path = function(path:String):String[] {
  * leading or trailing slashes.  In fact, all leading, trailing and
  * consecutive slashes are ignored.
  *
- * @param {String} path The path
+ * @param {string} path The path
  * @param {FileType} type The type (file or folder)
  * @return {Promise} fullfilled with file/folder id (string) on success
  *     or Error object on error.
  */
-export var get_resource_for_path = function(path:String, type?) {
+export var get_resource_for_path = function(path:string, type?) {
         var components = split_path(path);
         if (components.length == 0) {
             return gapiutils.execute(gapi.client.drive.about.get())
@@ -102,7 +102,7 @@ export var get_resource_for_path = function(path:String, type?) {
             var child_resource = i < components.length - 1;
             // IIFE or, component`, `t`, `child_resources` get shared in
             // between Promises
-            result = ((component:String, t:FileType, child_resource:Boolean, result) => {
+            result = ((component:string, t:FileType, child_resource:Boolean, result) => {
               return result.then((data) => {
                   return get_resource_for_relative_path(component, t, child_resource, data['id'])
                   }
@@ -119,7 +119,7 @@ export var get_resource_for_path = function(path:String, type?) {
  * or trailing slashes.  In fact, all leading, trailing and consecutive
  * slashes are ignored.
  *
- * @param {String} path The path
+ * @param {string} path The path
  * @param {FileType} type The type (file or folder)
  * @return {Promise} fullfilled with folder id (string) on success
  *     or Error object on error.
@@ -203,7 +203,7 @@ export var get_new_filename = function(opt_folderId, ext, base_name) {
  * @return {Promise} A promise resolved with the Google Drive Files
  *     resource for the uploaded file, or rejected with an Error object.
  */
-export var upload_to_drive = function(data, metadata:{mimeType:String}, opt_fileId?, opt_params?: any) {
+export var upload_to_drive = function(data, metadata:{mimeType:string}, opt_fileId?, opt_params?: any) {
     var params:Object = opt_params || {};
     var delimiter = '\r\n--' + MULTIPART_BOUNDARY + '\r\n';
     var close_delim = '\r\n--' + MULTIPART_BOUNDARY + '--';
