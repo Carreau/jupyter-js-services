@@ -151,6 +151,16 @@ export class GoogleDriveContents implements IContents  {
          * when checking if a file has been modified by another user.
          */
         this._last_observed_revision = {};
+        if(this._config === undefined){
+            this._config = {
+                loaded: {
+                    then: function(f){
+                        console.info('got no config')
+                        f({})
+                    }
+                }
+            }
+        }
         this._config.loaded.then((data) => {
           gapiutils.config(this._config);
           //gapiutils.gapi_ready.then(driveutils.set_user_info);
