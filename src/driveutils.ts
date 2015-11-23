@@ -86,6 +86,7 @@ export var split_path = function(path:string):string[] {
  *     or Error object on error.
  */
 export var get_resource_for_path = function(path:string, type?) {
+        console.log("should get path", path, "with type", type)
         var components = split_path(path);
         if (components.length == 0) {
             return gapiutils.execute(gapi.client.drive.about.get())

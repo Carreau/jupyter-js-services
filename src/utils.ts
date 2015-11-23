@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 'use strict';
 
-
+declare var $
 /**
  * Copy the contents of one object to another, recursively.
  *
@@ -115,7 +115,7 @@ function jsonToQueryString(json: any): string {
 export
 interface IAjaxSettings {
   method: string;
-  dataType: string;
+  dataType?: string;
   contentType?: string;
   data?: any;
 }
@@ -164,6 +164,9 @@ interface IAjaxError {
  */
 export
 function ajaxRequest(url: string, settings: IAjaxSettings, options?: IAjaxOptions): Promise<any> {
+  if (!settings.method){
+    throw new Error("settings.method cannot be none");
+    }
   options = options || {};
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
@@ -181,6 +184,7 @@ function ajaxRequest(url: string, settings: IAjaxSettings, options?: IAjaxOption
          req.setRequestHeader(prop, (options as any).requestHeaders[prop]);
        }
     }
+
     req.onload = () => {
       var response = req.responseText;
       if (settings.dataType === 'json' && response) {
@@ -242,24 +246,6 @@ export var wrap_ajax_error = function (jqXHR:any, status:any, error:any) {
     wrapped_error.xhr_status = status;
     wrapped_error.xhr_error = error;
     return wrapped_error;
-};
-
-/**
- * Like $.ajax, but returning an ES6 promise. success and error settings
- * will be ignored.
- */
-export var promising_ajax = function(url:string, settings:any) {
-    settings = settings || {};
-    return new Promise(function(resolve, reject) {
-        settings.success = function(data, status, jqXHR) {
-            resolve(data);
-        };
-        settings.error = function(jqXHR, status, error) {
-            log_ajax_error(jqXHR, status, error);
-            reject(wrap_ajax_error(jqXHR, status, error));
-        };
-        return ajaxRequest(url, settings);
-    });
 };
 
 

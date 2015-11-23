@@ -3,7 +3,6 @@
 //
 "use strict";
 import utils = require('./utils');
-//import dialog = require('base/js/dialog');
 import gapiutils = require('./gapiutils');
 import driveutils = require('./driveutils');
 import notebook_model = require('./notebook_model');
@@ -37,7 +36,7 @@ var contents_model_to_metadata_and_bytes = function(model):[any, string] {
         format = 'json'
         mimetype = driveutils.FOLDER_MIME_TYPE;
     } else {
-        throw ("Unrecognized type " + model['type']);
+        throw new Error("Unrecognized type " + model['type']);
     }
 
     // Set mime type according to format if it's not set
@@ -229,7 +228,6 @@ export class GoogleDriveContents implements IContents  {
                 } else {
                    reject(new Error('save cancelled')); 
                 }
-                //dialog.modal(options);
             });
         }
         return save();
@@ -274,8 +272,7 @@ export class GoogleDriveContents implements IContents  {
         return Promise.all([metadata_prm, contents_prm]).then(function(values) {
             var metadata = values[0];
             var contents = values[1];
-            var model = files_resource_to_contents_model(path, metadata, contents);
-            return model;
+            return files_resource_to_contents_model(path, metadata, contents);
         });
     }
 

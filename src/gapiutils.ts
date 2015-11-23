@@ -81,8 +81,14 @@ var ORIGIN_MISMATCH_MSG = (
 export var download = function(url:string):Promise<any> {
     // Sends request to load file to drive.
     var token = gapi.auth.getToken().access_token;
-    var settings = { headers: { 'Authorization': 'Bearer ' + token } };
-    return utils.promising_ajax(url, settings);
+    var settings = { headers: { 'Authorization': 'Bearer ' + token }, method: 'GET' };
+    return new Promise(function(resolve, reject){
+        utils.ajaxRequest(url, settings, {requestHeaders:{ 'Authorization': 'Bearer ' + token }})
+            .then(function(data){
+                resolve(data.data)
+            })
+        .catch(reject)
+    });
 };
 
 /**
