@@ -4,11 +4,9 @@
   "description": "Client APIs for the Jupyter services REST APIs",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
-  "dependencies": {
-    "phosphor-disposable": "^1.0.4",
-    "phosphor-signaling": "^1.1.2"
-  },
   "devDependencies": {
+    "phosphor-disposable": "^1.0.4",
+    "phosphor-signaling": "^1.1.2",
     "expect.js": "^0.3.1",
     "istanbul": "^0.3.18",
     "karma": "^0.13.9",
@@ -27,8 +25,8 @@
   },
   "scripts": {
     "clean": "rimraf docs && rimraf lib && rimraf test/build",
-    "build:src": "tsc --project src --sourceMap",
-    "build:test": "tsc --project test",
+    "build:src": "ntsc --project src --sourceMap",
+    "build:test": "ntsc --project test",
     "build": "npm run build:src && npm run build:test",
     "docs": "typedoc --options scripts/tdoptions.json",
     "postinstall": "npm dedupe",
